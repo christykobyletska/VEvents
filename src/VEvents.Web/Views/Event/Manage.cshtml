@@ -48,7 +48,13 @@
             @if (User.IsInRole(Roles.Admin))
             {
                 <td>
-                    @Html.DisplayFor(modelItem => item.Publisher.FullName)
+                    @if(item.Publisher != null) {
+                        @Html.DisplayFor(modelItem => item.Publisher.FullName)
+                    }
+                    else
+                    {
+                        <div>External</div>
+                    }
                 </td>
             }
             <td>
