@@ -7,6 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using StackExchange.Redis;
 
 namespace VEvents.Api.Controllers
 {
@@ -15,10 +18,14 @@ namespace VEvents.Api.Controllers
     public class EventController : ControllerBase
     {
         private readonly VEventsDbContext _VEventsDbContext;
+        private readonly IDatabase _redisCache;
+        private readonly ILogger<EventController> _logger;
 
-        public EventController(VEventsDbContext VEventsDbContext)
+        public EventController(VEventsDbContext VEventsDbContext, IDatabase redisCache, ILogger<EventController> logger)
         {
             _VEventsDbContext = VEventsDbContext;
+            _redisCache = redisCache;
+            _logger = logger;
         }
 
         [HttpGet("all")]
@@ -30,27 +37,33 @@ namespace VEvents.Api.Controllers
         [HttpGet("actual")]
         public async Task<IEnumerable<Event>> GetActual()
         {
-            return await GetActual(string.Empty).ConfigureAwait(false);
+            return await GetActual(null).ConfigureAwait(false);
         }
 
         [HttpGet("actual/{userId}")]
         public async Task<IEnumerable<Event>> GetActual(string userId)
         {
-            var actualEvents =  await _VEventsDbContext.Events
-                .Where(e => e.Status == EventStatus.Published && e.DateAndTime >= DateTime.Now)
-                .ToArrayAsync()
-                .ConfigureAwait(false);
+            IEnumerable<Event> actualEvents;
 
-            foreach (var @event in actualEvents)
+            try
             {
-                var likers = await _VEventsDbContext.EventLikers
-                    .Where(el => el.EventId == @event.Id)
-                    .Select(el => el.UserId)
-                    .ToArrayAsync()
-                    .ConfigureAwait(false);
+                var cacheKey = userId == null ? "Events" : $"Event:{userId}";
+                var events = await _redisCache.StringGetAsync(cacheKey).ConfigureAwait(false);
+                if (events.HasValue)
+                {
+                    actualEvents = JsonConvert.DeserializeObject<Event[]>(events);
+                }
+                else
+                {
+                    actualEvents = await GetActualInternal(userId).ConfigureAwait(false);
+                    _redisCache.StringSet(cacheKey, JsonConvert.SerializeObject(actualEvents), TimeSpan.FromSeconds(30));
+                }
 
-                @event.LikersCount = likers.Length;
-                @event.Liked = likers.Any(l => l == userId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("An error occured while caching events.", ex);
+                return await GetActualInternal(userId).ConfigureAwait(false);
             }
 
             return actualEvents;
@@ -137,6 +150,28 @@ namespace VEvents.Api.Controllers
             }
 
             await _VEventsDbContext.SaveChangesAsync().ConfigureAwait(false);
+        }
+
+        public async Task<IEnumerable<Event>> GetActualInternal(string userId)
+        {
+            var actualEvents = await _VEventsDbContext.Events
+                .Where(e => e.Status == EventStatus.Published && e.DateAndTime >= DateTime.Now)
+                .ToArrayAsync()
+                .ConfigureAwait(false);
+
+            foreach (var @event in actualEvents)
+            {
+                var likers = await _VEventsDbContext.EventLikers
+                    .Where(el => el.EventId == @event.Id)
+                    .Select(el => el.UserId)
+                    .ToArrayAsync()
+                    .ConfigureAwait(false);
+
+                @event.LikersCount = likers.Length;
+                @event.Liked = likers.Any(l => l == userId);
+            }
+
+            return actualEvents;
         }
     }
 }
