@@ -1,0 +1,65 @@
+﻿@model IEnumerable<VEvents.Web.ViewModels.Event>
+
+@{
+    ViewData["Title"] = "Manage Events";
+}
+
+<h1>Manage Events</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Title)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Details)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DateAndTime)
+            </th>
+            @if (User.IsInRole(Roles.Admin))
+            {
+                <th>
+                    Publisher
+                </th>
+            }
+            <th>
+                @Html.DisplayNameFor(model => model.Status)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Title)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Details)
+            </td>
+            <td>
+                <p style="white-space:pre">@Html.DisplayFor(modelItem => item.DateAndTime)</p>
+            </td>
+            @if (User.IsInRole(Roles.Admin))
+            {
+                <td>
+                    @Html.DisplayFor(modelItem => item.Publisher.FullName)
+                </td>
+            }
+            <td>
+                @Html.DisplayFor(modelItem => item.Status)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                <a asp-action="AllDetails" asp-route-id="@item.Id">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
