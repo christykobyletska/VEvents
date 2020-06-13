@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace VEvents.Web.Controllers
@@ -27,7 +28,9 @@ namespace VEvents.Web.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var actualEvents = await _eventService.GetActualEventsAsync().ConfigureAwait(false);
+            var currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var actualEvents = await _eventService.GetActualEventsAsync(currentUserId).ConfigureAwait(false);
 
             return View(actualEvents
                 .Select(e => e.ToEventViewModel(_applicationDbContext))
@@ -144,6 +147,16 @@ namespace VEvents.Web.Controllers
             await _eventService.DeleteEventAsync(id);
 
             return RedirectToAction(nameof(Manage));
+        }
+
+        [Authorize]
+        public async Task<IActionResult> ToggleLike(string id)
+        {
+            var currentUserId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            await _eventService.ToggleLikeAsync(id, currentUserId);
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }

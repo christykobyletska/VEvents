@@ -24,15 +24,36 @@ namespace VEvents.Api.Controllers
         [HttpGet("all")]
         public async Task<IEnumerable<Event>> GetAll()
         {
-            return await _VEventsDbContext.Events.ToListAsync();
+            return await _VEventsDbContext.Events.ToListAsync().ConfigureAwait(false);
         }
 
         [HttpGet("actual")]
         public async Task<IEnumerable<Event>> GetActual()
         {
-            return await _VEventsDbContext.Events
+            return await GetActual(string.Empty).ConfigureAwait(false);
+        }
+
+        [HttpGet("actual/{userId}")]
+        public async Task<IEnumerable<Event>> GetActual(string userId)
+        {
+            var actualEvents =  await _VEventsDbContext.Events
                 .Where(e => e.Status == EventStatus.Published && e.DateAndTime >= DateTime.Now)
-                .ToArrayAsync();
+                .ToArrayAsync()
+                .ConfigureAwait(false);
+
+            foreach (var @event in actualEvents)
+            {
+                var likers = await _VEventsDbContext.EventLikers
+                    .Where(el => el.EventId == @event.Id)
+                    .Select(el => el.UserId)
+                    .ToArrayAsync()
+                    .ConfigureAwait(false);
+
+                @event.LikersCount = likers.Length;
+                @event.Liked = likers.Any(l => l == userId);
+            }
+
+            return actualEvents;
         }
 
         [HttpGet("user/{userId}")]
@@ -40,27 +61,39 @@ namespace VEvents.Api.Controllers
         {
             return await _VEventsDbContext.Events
                 .Where(e => e.PublisherId == userId)
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
         }
 
         [HttpGet("{id}")]
-        public Task<Event> Get(string id)
+        public async Task<Event> Get(string id)
         {
-            return _VEventsDbContext.Events.FirstOrDefaultAsync(m => m.Id == id);
+            var @event = await _VEventsDbContext.Events
+                .FirstOrDefaultAsync(m => m.Id == id)
+                .ConfigureAwait(false);
+
+            @event.LikersCount = await _VEventsDbContext.EventLikers
+                .CountAsync(el => el.EventId == @event.Id)
+                .ConfigureAwait(false);
+
+            return @event;
         }
 
         [HttpPost]
         public async Task<Event> Post(Event @event)
         {
             _VEventsDbContext.Events.Add(@event);
-            await _VEventsDbContext.SaveChangesAsync();
+            await _VEventsDbContext.SaveChangesAsync().ConfigureAwait(false);
             return @event;
         }
 
         [HttpPut("{id}")]
         public async Task Put(string id, Event @event)
         {
-            var eventToEdit = await _VEventsDbContext.Events.FirstOrDefaultAsync(e => e.Id == id);
+            var eventToEdit = await _VEventsDbContext.Events
+                .FirstOrDefaultAsync(e => e.Id == id)
+                .ConfigureAwait(false);
+
             if (eventToEdit == null)
             {
                 throw new ArgumentException($"Event with Id:{@event.Id} does not exist.");
@@ -71,15 +104,39 @@ namespace VEvents.Api.Controllers
             eventToEdit.DateAndTime = @event.DateAndTime;
             eventToEdit.Status = @event.Status;
 
-            await _VEventsDbContext.SaveChangesAsync();
+            await _VEventsDbContext.SaveChangesAsync().ConfigureAwait(false);
         }
 
         [HttpDelete("{id}")]
         public async Task Delete(string id)
         {
-            var @event = await _VEventsDbContext.Events.FirstOrDefaultAsync(m => m.Id == id);
+            var @event = await _VEventsDbContext.Events
+                .FirstOrDefaultAsync(m => m.Id == id)
+                .ConfigureAwait(false);
+
             _VEventsDbContext.Events.Remove(@event);
-            await _VEventsDbContext.SaveChangesAsync();
+
+            await _VEventsDbContext.SaveChangesAsync().ConfigureAwait(false);
+        }
+
+        [HttpGet("like/{eventId}/{userId}")]
+        public async Task ToggleLike(string eventId, string userId)
+        {
+            var liker = await _VEventsDbContext.EventLikers
+                .FirstOrDefaultAsync(el => el.EventId == eventId && el.UserId == userId)
+                .ConfigureAwait(false);
+
+            if (liker != null)
+            {
+                _VEventsDbContext.EventLikers.Remove(liker);
+            }
+            else
+            {
+                liker = new EventLiker {EventId = eventId, UserId = userId};
+                _VEventsDbContext.EventLikers.Add(liker);
+            }
+
+            await _VEventsDbContext.SaveChangesAsync().ConfigureAwait(false);
         }
     }
 }

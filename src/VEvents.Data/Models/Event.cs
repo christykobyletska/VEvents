@@ -2,6 +2,7 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -20,5 +21,7 @@ namespace VEvents.Data.Models
         public DateTime DateAndTime { get; set; }
         public EventStatus Status { get; set; }
         public string PublisherId { get; set; }
+        public int LikersCount { get; set; }
+        public bool Liked { get; set; }
     }
 }

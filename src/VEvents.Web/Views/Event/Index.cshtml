@@ -25,6 +25,7 @@
                 Publisher
             </th>
             <th></th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -41,6 +42,29 @@
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Publisher.FullName)
+            </td>
+            <td>
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <a asp-action="ToggleLike" asp-route-id="@item.Id" style="text-decoration: none">
+                        @if (@item.Liked) 
+                        {
+                            <img src="@Url.Content("~/img/liked.png")" title="Dislike" width="25" height="25"/>
+                        }
+                        else
+                        {
+                            <img src="@Url.Content("~/img/likeless.png")" title="Like" width="25" height="25"/>
+                        }
+                    </a>
+                    @item.LikersCount
+                }
+                else
+                {
+                <span>
+                    <img src="@Url.Content("~/img/star.png")" title="Users rating" width="25" height="25" />
+                </span>
+                    @item.LikersCount
+                }
             </td>
             <td>
                 <a asp-action="Details" asp-route-id="@item.Id">Details</a>

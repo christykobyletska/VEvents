@@ -10,6 +10,8 @@ namespace VEvents.Data
     {
         public DbSet<Event> Events { get; set; }
 
+        public DbSet<EventLiker> EventLikers { get; set; }
+
         public VEventsDbContext()
             : this(new DbContextOptions<VEventsDbContext>())
         {

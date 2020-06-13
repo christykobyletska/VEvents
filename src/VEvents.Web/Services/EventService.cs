@@ -23,9 +23,9 @@ namespace VEvents.Web.Services
             return await GetEventsAsync("all");
         }
 
-        public async Task<IEnumerable<Event>> GetActualEventsAsync()
+        public async Task<IEnumerable<Event>> GetActualEventsAsync(string userId)
         {
-            return await GetEventsAsync("actual");
+            return await GetEventsAsync(userId == null ? "actual" : $"actual/{userId}");
         }
 
         public async Task<IEnumerable<Event>> GetUserEventsAsync(string userId)
@@ -92,6 +92,18 @@ namespace VEvents.Web.Services
             if (!result.IsSuccessStatusCode)
             {
                 throw new HttpRequestException($"An error occured while deleting event with Id:{id}.");
+            }
+        }
+
+        public async Task ToggleLikeAsync(string eventId, string userId)
+        {
+            using var client = new HttpClient { BaseAddress = new Uri($"{_VEventsApiUrl}/like/{eventId}/{userId}") };
+
+            var result = await client.GetAsync(string.Empty);
+
+            if (!result.IsSuccessStatusCode)
+            {
+                throw new HttpRequestException($"An error occured while toggling like for event with Id:{eventId} and user with Id:{userId}.");
             }
         }
 

@@ -1,6 +1,7 @@
 ﻿using VEvents.Data.Enums;
 using VEvents.Web.Models;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace VEvents.Web.ViewModels
@@ -30,6 +31,10 @@ namespace VEvents.Web.ViewModels
         [Required]
         [EnumDataType(typeof(EventStatus))]
         public EventStatus Status { get; set; }
+
+        public int LikersCount { get; set; }
+
+        public bool Liked { get; set; }
 
         public ApplicationUser Publisher { get; set; }
     }

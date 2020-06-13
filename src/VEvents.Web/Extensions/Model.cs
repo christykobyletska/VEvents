@@ -1,8 +1,9 @@
-﻿using VEvents.Web.Data;
+﻿using System.Linq;
+using System.Security.Claims;
+using VEvents.Web.Data;
 using VEvents.Web.Models;
 using VEvents.Web.ViewModels;
-using MongoDB.Bson;
-
+using Microsoft.AspNetCore.Http;
 using MongoEvent = VEvents.Data.Models.Event;
 
 namespace VEvents.Web.Extensions
@@ -41,6 +42,8 @@ namespace VEvents.Web.Extensions
                 Details = @event.Details,
                 DateAndTime = @event.DateAndTime,
                 Status = @event.Status,
+                LikersCount = @event.LikersCount,
+                Liked = @event.Liked,
                 Publisher = context.Users.Find(@event.PublisherId)
             };
         }
