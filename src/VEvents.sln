@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VEvents.Web", "VEvents.Web\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VEvents.Api", "VEvents.Api\VEvents.Api.csproj", "{FBDCEC97-BBC7-42D0-A3B2-3EA588FF0206}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VEvents.Poller", "VEvents.Poller\VEvents.Poller.csproj", "{46C8891D-0996-4E9E-AD8F-F0B6B156672A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{FBDCEC97-BBC7-42D0-A3B2-3EA588FF0206}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FBDCEC97-BBC7-42D0-A3B2-3EA588FF0206}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FBDCEC97-BBC7-42D0-A3B2-3EA588FF0206}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46C8891D-0996-4E9E-AD8F-F0B6B156672A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46C8891D-0996-4E9E-AD8F-F0B6B156672A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46C8891D-0996-4E9E-AD8F-F0B6B156672A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46C8891D-0996-4E9E-AD8F-F0B6B156672A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
